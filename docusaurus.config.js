@@ -31,7 +31,7 @@ const config = {
   // url only affects absolute URLs, meaning the sitemap, canonical tags and social cards,
   // so an approximate value never breaks the site. Set the repo variable DOCS_SITE_URL to
   // the custom domain once it exists.
-  url: process.env.DOCS_SITE_URL || "https://docs-site.pages.dev",
+  url: process.env.DOCS_SITE_URL || `https://${ORG}.github.io`,
   baseUrl: process.env.DOCS_BASE_URL || "/docs-site/",   // GitHub Pages project sites serve
   // from /<repo>/. Serving at "/" here makes every asset resolve one directory too high and the
   // site 404s. Change back to "/" only if this moves to Cloudflare Pages or a custom domain root.
@@ -113,6 +113,11 @@ const config = {
       "@easyops-cn/docusaurus-search-local",
       {
         hashed: true,
+        // REQUIRED because siteConfig.noIndex is on. This plugin skips any page whose
+        // HTML carries a robots noindex tag, so noIndex silently emptied the index and
+        // every search returned "No results". This opts the local index back in; it has
+        // no effect on crawlers, which still see the meta tag and stay away.
+        forceIgnoreNoIndex: true,
         indexBlog: false,
         docsRouteBasePath: "/",
         highlightSearchTermsOnTargetPage: true,

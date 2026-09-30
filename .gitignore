@@ -1,0 +1,15 @@
+# Generated on every build by scripts/sync-docs.mjs. Never commit anything under here.
+docs/
+build/
+.docusaurus/
+node_modules/
+
+# Local credentials. DOCS_TOKEN is a PAT that can read every repo in the org; a stray
+# .env is the realistic way it ends up in git history.
+.env
+.env.local
+.env.*.local
+
+*.log
+.wrangler/
+.DS_Store

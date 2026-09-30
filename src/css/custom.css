@@ -1,0 +1,150 @@
+/*
+ * Typography modelled on VitePress: Inter for text, JetBrains Mono for code, roomier
+ * line height, quieter sidebar. Fonts are self-hosted through @fontsource, so the site
+ * makes no external requests and works behind an auth proxy or offline.
+ */
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
+
+:root {
+  --ifm-color-primary: #3451b2;
+  --ifm-color-primary-dark: #2f49a3;
+  --ifm-color-primary-darker: #2c4599;
+  --ifm-color-primary-darkest: #24397e;
+  --ifm-color-primary-light: #4762c4;
+  --ifm-color-primary-lighter: #5169c8;
+  --ifm-color-primary-lightest: #6b80d1;
+
+  --ifm-font-family-base: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+  --ifm-font-family-monospace: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace,
+    "SF Mono", Menlo, Consolas, monospace;
+
+  --ifm-font-size-base: 16px;
+  --ifm-line-height-base: 1.75;
+  --ifm-paragraph-margin-bottom: 1.15rem;
+
+  --ifm-heading-font-weight: 600;
+  --ifm-h1-font-size: 2rem;
+  --ifm-h2-font-size: 1.5rem;
+  --ifm-h3-font-size: 1.2rem;
+
+  --ifm-code-font-size: 87.5%;
+  --ifm-code-background: #f6f6f7;
+  --ifm-code-padding-horizontal: 0.35rem;
+  --ifm-code-padding-vertical: 0.15rem;
+  --ifm-pre-background: #f6f6f7;
+  --ifm-pre-line-height: 1.6;
+
+  --ifm-navbar-height: 4rem;
+  --ifm-navbar-shadow: none;
+  --ifm-toc-border-color: #e2e2e3;
+  --ifm-table-border-color: #e2e2e3;
+  --ifm-blockquote-color: #3c3c43;
+  --ifm-blockquote-border-color: #e2e2e3;
+
+  --doc-sidebar-width: 272px;
+}
+
+[data-theme="dark"] {
+  --ifm-color-primary: #a8b1ff;
+  --ifm-color-primary-dark: #8b97ff;
+  --ifm-color-primary-darker: #7c8aff;
+  --ifm-color-primary-darkest: #5064ff;
+  --ifm-color-primary-light: #c5cbff;
+  --ifm-color-primary-lighter: #d4d8ff;
+  --ifm-color-primary-lightest: #ffffff;
+
+  --ifm-background-color: #1b1b1f;
+  --ifm-background-surface-color: #161618;
+  --ifm-code-background: #202127;
+  --ifm-pre-background: #161618;
+  --ifm-toc-border-color: #2e2e32;
+  --ifm-table-border-color: #2e2e32;
+  --ifm-blockquote-color: #c9c9c9;
+  --ifm-blockquote-border-color: #2e2e32;
+}
+
+/* Headings sit tighter than Infima's default, which is what makes VitePress feel calm. */
+.markdown h1 {
+  letter-spacing: -0.02em;
+  margin-bottom: 1.25rem;
+}
+.markdown h2 {
+  letter-spacing: -0.01em;
+  margin-top: 2.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--ifm-toc-border-color);
+}
+.markdown h3 {
+  margin-top: 2rem;
+}
+
+/* Quieter sidebar. Smaller, lighter, with the active item carried by weight and color
+   rather than a filled background. */
+.menu {
+  font-size: 0.875rem;
+  padding: 1rem 0.75rem;
+}
+.menu__list-item-collapsible,
+.menu__link {
+  font-weight: 400;
+  color: var(--ifm-color-emphasis-700);
+  border-radius: 6px;
+}
+.menu__link--active:not(.menu__link--sublist) {
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+  background: transparent;
+}
+.theme-doc-sidebar-item-category > .menu__list-item-collapsible > .menu__link {
+  font-weight: 600;
+  color: var(--ifm-heading-color);
+}
+.theme-doc-sidebar-container {
+  border-right: 1px solid var(--ifm-toc-border-color);
+}
+
+/* Right rail, VitePress calls it "On this page". */
+.table-of-contents {
+  font-size: 0.8125rem;
+  border-left: 1px solid var(--ifm-toc-border-color);
+}
+.table-of-contents__link--active {
+  font-weight: 600;
+}
+
+/* Code blocks: flatter, with the language label kept small and out of the way. */
+.theme-code-block {
+  box-shadow: none !important;
+  border: 1px solid var(--ifm-toc-border-color);
+  border-radius: 8px;
+}
+.prism-code {
+  font-size: 0.8125rem;
+}
+
+/* Tables read a lot in these docs. Give them air and a quiet header. */
+.markdown table {
+  display: table;
+  width: 100%;
+  font-size: 0.9375rem;
+}
+.markdown table thead tr {
+  border-bottom: 2px solid var(--ifm-table-border-color);
+}
+.markdown table th {
+  font-weight: 600;
+  text-align: left;
+}
+
+/* The metadata line under a heading, e.g. "Owner: ... | Last reviewed: ..." */
+.markdown blockquote {
+  font-size: 0.9375rem;
+  border-left-width: 3px;
+}
+
+.navbar__title {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}

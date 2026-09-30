@@ -1,0 +1,26 @@
+# Drop this into EVERY repo that has a docs/ folder, at
+# .github/workflows/notify-docs-site.yml
+#
+# It tells the docs site to rebuild when docs change, so the site is current
+# within a minute of a merge instead of waiting for the nightly cron.
+#
+# Requires an org secret DOCS_DISPATCH_TOKEN with repo scope on the docs-site repo.
+
+name: Notify docs site
+
+on:
+  push:
+    branches: [main]
+    paths: ["docs/**"]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger docs site rebuild
+        run: |
+          curl -sf -X POST \
+            -H "Authorization: Bearer ${{ secrets.DOCS_DISPATCH_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository_owner }}/docs-site/dispatches \
+            -d '{"event_type":"docs-updated"}'

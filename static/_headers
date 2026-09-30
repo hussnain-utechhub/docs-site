@@ -1,0 +1,22 @@
+# Cloudflare Pages reads this from the root of the deployed directory. Docusaurus copies
+# everything in static/ into build/ verbatim, so this file gets there on its own.
+#
+# Cloudflare Access is the real access control. These headers are the second layer, for the
+# window where a URL is reachable but should not be indexed or embedded.
+
+/*
+  # These docs name our services, integration points and where credentials live. Keep them
+  # out of search indexes even if a hostname is briefly reachable without Access in front.
+  X-Robots-Tag: noindex, nofollow
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# Docusaurus fingerprints everything under assets/, so the filename changes whenever the
+# content does and these can be cached forever.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# HTML must not be, or a rebuild takes a day to reach anyone.
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate

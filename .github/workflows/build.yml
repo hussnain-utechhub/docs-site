@@ -1,0 +1,108 @@
+name: Build docs site
+
+on:
+  push:
+    branches: [main]
+  # Any repo in the org can trigger a rebuild when its docs change.
+  repository_dispatch:
+    types: [docs-updated]
+  # Safety net, and in practice the main trigger: no repo currently fires the dispatch
+  # above, and nothing at all fires when a repo is created. Every four hours, every day,
+  # so a repo added on a Friday afternoon is on the site the same afternoon.
+  #
+  # :17 rather than :00 on purpose. GitHub queues scheduled runs and drops them under
+  # load; the top of the hour is the most contended slot on the platform, and this
+  # workflow was routinely running five hours late on "0 7 * * 1-5".
+  schedule:
+    - cron: "17 */4 * * *"
+  workflow_dispatch:
+
+# Publishing is opt-in. The deploy step below only runs when the repo variable
+# PUBLISH_TARGET is set to "cloudflare-pages". Until then the site builds on every push and
+# goes nowhere, which is what we want while hosting is being set up.
+#
+# READ docs-site/ACCESS.md BEFORE SETTING THAT VARIABLE. Deploying puts our architecture,
+# integration points and credential locations on a URL. That URL is only safe once
+# Cloudflare Access sits in front of it. A bare *.pages.dev address is world-readable.
+
+permissions:
+  contents: read
+  pages: write        # deploy-pages
+  id-token: write    # deploy-pages OIDC
+
+concurrency:
+  group: docs-site
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # DOCS_ORG, not GITHUB_ORG. GitHub Actions reserves the GITHUB_ prefix and will not
+      # let you create a variable with that name.
+      - name: Pull docs from every repo
+        env:
+          DOCS_ORG: ${{ vars.DOCS_ORG }}
+          # Fine-grained PAT with Contents: read, or a GitHub App token. The built-in
+          # GITHUB_TOKEN cannot read other repos, which is why this secret exists.
+          DOCS_TOKEN: ${{ secrets.DOCS_SYNC_TOKEN }}
+          SKIP_REPOS: ""
+        run: node scripts/sync-docs.mjs
+
+      # Turns any docs/api/openapi.yaml the sync pulled into endpoint pages, then stamps
+      # them with the spec's real date. Does nothing if no repo ships a spec.
+      - name: Generate API reference
+        env:
+          DOCS_ORG: ${{ vars.DOCS_ORG }}
+        run: npm run gen-api
+
+      - name: Build
+        env:
+          DOCS_ORG: ${{ vars.DOCS_ORG }}
+          # Optional. The custom domain, once there is one. Only affects the sitemap,
+          # canonical tags and social cards.
+          DOCS_SITE_URL: ${{ vars.DOCS_SITE_URL }}
+        run: npx docusaurus build
+
+      # The site is static: whatever the build token could see is baked into the HTML for every
+      # viewer. A multi-owner DOCS_ORG pulls personal repos into that HTML, so it must never reach a
+      # shared URL. Fail loudly rather than leak quietly.
+      - name: Refuse to deploy a multi-owner build
+        if: vars.PUBLISH_TARGET != ''
+        run: |
+          case "${{ vars.DOCS_ORG }}" in
+            *,*) echo "DOCS_ORG lists more than one owner. Refusing to deploy."; exit 1 ;;
+          esac
+
+      # Opt in by setting the repo variable PUBLISH_TARGET to "github-pages", and only after reading
+      # ACCESS.md. A Pages site built from a PRIVATE repo is still PUBLICLY readable - access control
+      # for Pages is GitHub Enterprise Cloud only. Without the variable these steps are skipped.
+      - name: Upload Pages artifact
+        if: vars.PUBLISH_TARGET == 'github-pages'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build
+
+  deploy:
+    needs: build
+    if: vars.PUBLISH_TARGET == 'github-pages'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

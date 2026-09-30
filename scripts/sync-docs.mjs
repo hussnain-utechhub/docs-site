@@ -25,6 +25,11 @@
  *   DOCS_DIR      folder inside each repo to pull (default: docs)
  *   SKIP_REPOS    comma separated repo names to ignore
  *   SELF_REPO     this repo's name, never pulled (default: docs-site)
+ *   DOCS_LOG_REPO_NAMES
+ *                 "1" to print the full repo inventory. OFF by default because this
+ *                 repo is public, which makes its Actions logs world-readable, and the
+ *                 inventory includes private repos that are nowhere on the site. Set it
+ *                 as a repo variable only while diagnosing a missing repo, then remove it.
  *
  * The names avoid the GITHUB_ prefix on purpose. GitHub Actions reserves it: a repo
  * variable named GITHUB_ORG cannot be created at all. GITHUB_ORG and GITHUB_TOKEN still
@@ -49,6 +54,9 @@ const DOCS_DIR = process.env.DOCS_DIR || "docs";
 const SELF = process.env.SELF_REPO || "docs-site";
 const SKIP = (process.env.SKIP_REPOS || "").split(",").map((s) => s.trim()).filter(Boolean);
 const API_BASE = process.env.API_BASE || "https://api.github.com";
+// See DOCS_LOG_REPO_NAMES above. Names of repos we actually pull are printed regardless:
+// those are on the public site anyway, so they are not the ones worth withholding.
+const LOG_NAMES = process.env.DOCS_LOG_REPO_NAMES === "1";
 SKIP.push(SELF); // this repo generates docs/ at build time, so pulling it would recurse
 
 if (OWNERS.length === 0 || !TOKEN) {
@@ -340,10 +348,14 @@ ${missing}
 const repos = [];
 for (const owner of OWNERS) {
   const found = await listRepos(owner);
-  // List them by name. A token set to "Only select repositories" silently omits repos it
-  // was not granted, and the site just quietly lacks them -- there is no error anywhere.
-  // Printing the names is the only way anyone notices one is missing.
-  console.log(`Found ${found.length} repos in ${owner}: ${found.map((r) => r.name).join(", ")}`);
+  // A token set to "Only select repositories" silently omits repos it was not granted,
+  // and the site just quietly lacks them -- there is no error anywhere. The names are the
+  // only way anyone notices one is missing, so keep them one env var away.
+  console.log(
+    LOG_NAMES
+      ? `Found ${found.length} repos in ${owner}: ${found.map((r) => r.name).join(", ")}`
+      : `Found ${found.length} repos in ${owner}. Set DOCS_LOG_REPO_NAMES=1 to list them.`
+  );
   for (const r of found) repos.push({ ...r, owner });
 }
 
@@ -388,7 +400,11 @@ for (const repo of repos) {
 }
 
 if (skipped.length) {
-  console.log(`\nNo ${DOCS_DIR}/ folder, so not on the site: ${skipped.map((r) => r.name).join(", ")}`);
+  console.log(
+    LOG_NAMES
+      ? `\nNo ${DOCS_DIR}/ folder, so not on the site: ${skipped.map((r) => r.name).join(", ")}`
+      : `\n${skipped.length} repos have no ${DOCS_DIR}/ folder, so are not on the site.`
+  );
 }
 
 writeRootIndex(pulled, skipped);

@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
 
 # Publishing is opt-in. The deploy step below only runs when the repo variable
-# PUBLISH_TARGET is set to "cloudflare-pages". Until then the site builds on every push and
+# PUBLISH_TARGET is set to "github-pages". Until then the site builds on every push and
 # goes nowhere, which is what we want while hosting is being set up.
 #
 # READ docs-site/ACCESS.md BEFORE SETTING THAT VARIABLE. Deploying puts our architecture,

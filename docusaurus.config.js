@@ -38,6 +38,14 @@ const config = {
   organizationName: ORG,
   projectName: "docs-site",
 
+  // GitHub Pages ignores static/_headers -- that file is a Cloudflare Pages convention --
+  // so the "X-Robots-Tag: noindex, nofollow" it sets is silently dropped here. This puts
+  // the same instruction in a <meta name="robots"> tag on every page, which every crawler
+  // honours, so moving hosts did not quietly opt these docs into Google.
+  //
+  // Set the repo variable DOCS_INDEXABLE to "1" if you do want them found by search.
+  noIndex: process.env.DOCS_INDEXABLE !== "1",
+
   // Fail the build on a broken internal link. Worth it. Dead links are how a docs
   // site quietly stops being trustworthy.
   onBrokenLinks: "throw",
